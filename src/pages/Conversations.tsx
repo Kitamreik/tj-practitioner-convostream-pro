@@ -187,7 +187,7 @@ const Conversations: React.FC = () => {
     const unsub = onSnapshot(
       q,
       (snapshot) => {
-        setMessages(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as ConversationMessage));
+        setMessages(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as ConversationMessage)));
       },
       (error) => {
         console.error("Messages listener error:", error);
