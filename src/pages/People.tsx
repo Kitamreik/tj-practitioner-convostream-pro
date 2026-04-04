@@ -1,19 +1,75 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import NewPersonDialog from "@/components/NewPersonDialog";
 
-const mockPeople = [
-  { id: "1", name: "Sarah Mitchell", email: "sarah@example.com", phone: "+1 555-0101", conversations: 12, lastActive: "2 min ago", tags: ["VIP", "Premium"] },
-  { id: "2", name: "James Rodriguez", email: "james@example.com", phone: "+1 555-0102", conversations: 8, lastActive: "15 min ago", tags: ["New"] },
-  { id: "3", name: "Emily Chen", email: "emily@example.com", phone: "+1 555-0103", conversations: 23, lastActive: "1 hr ago", tags: ["Enterprise"] },
-  { id: "4", name: "Michael Brown", email: "michael@example.com", phone: "+1 555-0104", conversations: 5, lastActive: "3 hrs ago", tags: [] },
-  { id: "5", name: "Lisa Anderson", email: "lisa@example.com", phone: "+1 555-0105", conversations: 17, lastActive: "1 day ago", tags: ["VIP"] },
+interface Person {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  conversations: number;
+  lastActive: any;
+  tags: string[];
+}
+
+const fallbackPeople: Person[] = [
+  { id: "1", name: "Sarah Mitchell", email: "sarah@example.com", phone: "+1 555-0101", conversations: 12, lastActive: null, tags: ["VIP", "Premium"] },
+  { id: "2", name: "James Rodriguez", email: "james@example.com", phone: "+1 555-0102", conversations: 8, lastActive: null, tags: ["New"] },
+  { id: "3", name: "Emily Chen", email: "emily@example.com", phone: "+1 555-0103", conversations: 23, lastActive: null, tags: ["Enterprise"] },
+  { id: "4", name: "Michael Brown", email: "michael@example.com", phone: "+1 555-0104", conversations: 5, lastActive: null, tags: [] },
+  { id: "5", name: "Lisa Anderson", email: "lisa@example.com", phone: "+1 555-0105", conversations: 17, lastActive: null, tags: ["VIP"] },
 ];
 
+function formatLastActive(ts: any): string {
+  if (!ts) return "—";
+  if (ts?.toDate) {
+    const d = ts.toDate();
+    const now = new Date();
+    const diffMin = Math.floor((now.getTime() - d.getTime()) / 60000);
+    if (diffMin < 1) return "Just now";
+    if (diffMin < 60) return `${diffMin} min ago`;
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return `${diffHr} hr ago`;
+    return `${Math.floor(diffHr / 24)} day(s) ago`;
+  }
+  return String(ts);
+}
+
 const People: React.FC = () => {
+  const [people, setPeople] = useState<Person[]>([]);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const q = query(collection(db, "people"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(
+      q,
+      (snapshot) => {
+        if (snapshot.empty) {
+          setPeople(fallbackPeople);
+        } else {
+          setPeople(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Person)));
+        }
+      },
+      (error) => {
+        console.error("People listener error:", error);
+        setPeople(fallbackPeople);
+      }
+    );
+    return unsub;
+  }, []);
+
+  const filtered = people.filter(
+    (p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.email.toLowerCase().includes(search.toLowerCase()) ||
+      p.phone.includes(search)
+  );
+
   return (
     <div className="p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
@@ -21,15 +77,17 @@ const People: React.FC = () => {
           <h1 className="text-2xl font-bold text-foreground">People</h1>
           <p className="text-muted-foreground mt-1">Unified view of every customer</p>
         </div>
-        <Button className="gap-2">
-          <Filter className="h-4 w-4" />
-          Filters
-        </Button>
+        <NewPersonDialog />
       </div>
 
       <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search people by name, email, or phone..." className="pl-9 max-w-md" />
+        <Input
+          placeholder="Search people by name, email, or phone..."
+          className="pl-9 max-w-md"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
       <div className="rounded-xl border border-border overflow-hidden">
@@ -44,7 +102,7 @@ const People: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {mockPeople.map((person, i) => (
+            {filtered.map((person, i) => (
               <motion.tr
                 key={person.id}
                 initial={{ opacity: 0, y: 5 }}
@@ -65,10 +123,10 @@ const People: React.FC = () => {
                   <p className="text-xs text-muted-foreground">{person.phone}</p>
                 </td>
                 <td className="px-6 py-4 text-sm text-foreground">{person.conversations}</td>
-                <td className="px-6 py-4 text-sm text-muted-foreground">{person.lastActive}</td>
+                <td className="px-6 py-4 text-sm text-muted-foreground">{formatLastActive(person.lastActive)}</td>
                 <td className="px-6 py-4">
                   <div className="flex gap-1">
-                    {person.tags.map((tag) => (
+                    {(person.tags || []).map((tag) => (
                       <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
                     ))}
                   </div>
