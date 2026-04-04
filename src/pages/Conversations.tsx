@@ -347,6 +347,24 @@ const Conversations: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <FileText className="h-3.5 w-3.5" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleCopyTranscript} className="gap-2">
+                    <Copy className="h-3.5 w-3.5" />
+                    Copy to Clipboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDownloadTranscript} className="gap-2">
+                    <Download className="h-3.5 w-3.5" />
+                    Download as TXT
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="outline" size="sm" className="gap-1.5">
                 <User className="h-3.5 w-3.5" />
                 Profile
