@@ -9,10 +9,20 @@ import {
   Clock,
   User,
   ChevronRight,
+  Download,
+  Copy,
+  FileText,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "@/hooks/use-toast";
 import {
   collection,
   query,
@@ -144,6 +154,46 @@ const Conversations: React.FC = () => {
   const [search, setSearch] = useState("");
   const [replyText, setReplyText] = useState("");
   const [usingFallback, setUsingFallback] = useState(false);
+
+  const buildTranscriptText = () => {
+    if (!selected || messages.length === 0) return "";
+    const lines = [
+      `Conversation Transcript`,
+      `Customer: ${selected.customerName} (${selected.customerEmail})`,
+      `Channel: ${selected.channel.toUpperCase()}`,
+      `Status: ${selected.status}`,
+      `Exported: ${new Date().toLocaleString()}`,
+      `${"—".repeat(40)}`,
+      "",
+    ];
+    messages.forEach((msg) => {
+      const time = formatMessageTime(msg.timestamp) || "N/A";
+      const sender = msg.sender === "agent" ? "Agent" : selected.customerName;
+      lines.push(`[${time}] ${sender}: ${msg.text}`);
+    });
+    return lines.join("\n");
+  };
+
+  const handleCopyTranscript = () => {
+    const text = buildTranscriptText();
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      toast({ title: "Copied", description: "Transcript copied to clipboard." });
+    });
+  };
+
+  const handleDownloadTranscript = () => {
+    const text = buildTranscriptText();
+    if (!text) return;
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `transcript-${selected?.customerName.replace(/\s+/g, "-").toLowerCase()}-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Downloaded", description: "Transcript saved as text file." });
+  };
 
   // Real-time conversations listener
   useEffect(() => {
@@ -297,6 +347,24 @@ const Conversations: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <FileText className="h-3.5 w-3.5" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleCopyTranscript} className="gap-2">
+                    <Copy className="h-3.5 w-3.5" />
+                    Copy to Clipboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDownloadTranscript} className="gap-2">
+                    <Download className="h-3.5 w-3.5" />
+                    Download as TXT
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="outline" size="sm" className="gap-1.5">
                 <User className="h-3.5 w-3.5" />
                 Profile
