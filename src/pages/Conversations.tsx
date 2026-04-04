@@ -155,6 +155,46 @@ const Conversations: React.FC = () => {
   const [replyText, setReplyText] = useState("");
   const [usingFallback, setUsingFallback] = useState(false);
 
+  const buildTranscriptText = () => {
+    if (!selected || messages.length === 0) return "";
+    const lines = [
+      `Conversation Transcript`,
+      `Customer: ${selected.customerName} (${selected.customerEmail})`,
+      `Channel: ${selected.channel.toUpperCase()}`,
+      `Status: ${selected.status}`,
+      `Exported: ${new Date().toLocaleString()}`,
+      `${"—".repeat(40)}`,
+      "",
+    ];
+    messages.forEach((msg) => {
+      const time = formatMessageTime(msg.timestamp) || "N/A";
+      const sender = msg.sender === "agent" ? "Agent" : selected.customerName;
+      lines.push(`[${time}] ${sender}: ${msg.text}`);
+    });
+    return lines.join("\n");
+  };
+
+  const handleCopyTranscript = () => {
+    const text = buildTranscriptText();
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      toast({ title: "Copied", description: "Transcript copied to clipboard." });
+    });
+  };
+
+  const handleDownloadTranscript = () => {
+    const text = buildTranscriptText();
+    if (!text) return;
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `transcript-${selected?.customerName.replace(/\s+/g, "-").toLowerCase()}-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Downloaded", description: "Transcript saved as text file." });
+  };
+
   // Real-time conversations listener
   useEffect(() => {
     const q = query(collection(db, "conversations"), orderBy("timestamp", "desc"));
