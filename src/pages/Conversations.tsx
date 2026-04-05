@@ -329,11 +329,25 @@ const Conversations: React.FC = () => {
     return unsub;
   }, [selectedId, usingFallback]);
 
-  const filtered = conversations.filter(
-    (c) =>
+  const filtered = conversations.filter((c) => {
+    const matchesSearch =
       c.customerName.toLowerCase().includes(search.toLowerCase()) ||
-      c.lastMessage.toLowerCase().includes(search.toLowerCase())
-  );
+      c.lastMessage.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === "all" || c.status === statusFilter;
+    const matchesChannel = channelFilter === "all" || c.channel === channelFilter;
+    return matchesSearch && matchesStatus && matchesChannel;
+  });
+
+  const handleInsertTemplate = (template: MessageTemplate) => {
+    const filled = template.body
+      .replace(/\{\{name\}\}/g, selected?.customerName || "Customer")
+      .replace(/\{\{agent\}\}/g, profile?.displayName || "Agent")
+      .replace(/\{\{company\}\}/g, "ConvoHub");
+    setReplyText(filled);
+  };
+
+  const hasActiveFilters = statusFilter !== "all" || channelFilter !== "all";
+  const clearFilters = () => { setStatusFilter("all"); setChannelFilter("all"); };
 
   const handleSend = async () => {
     if (!replyText.trim() || !selectedId || usingFallback) return;
