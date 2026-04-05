@@ -495,6 +495,7 @@ const Conversations: React.FC = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <ConversationTemplates onInsertTemplate={handleInsertTemplate} />
               <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setProfileOpen(true)}>
                 <User className="h-3.5 w-3.5" /> Profile
               </Button>
