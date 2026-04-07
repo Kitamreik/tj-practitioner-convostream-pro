@@ -124,8 +124,8 @@ const AppSidebar: React.FC = () => {
         <div className="mx-3 mb-2 rounded-lg bg-primary/5 border border-primary/20 p-3">
           <p className="text-xs font-medium text-foreground mb-1">Unread Conversations</p>
           <div className="flex gap-3 text-xs text-muted-foreground">
-            {unreadCounts.active > 0 && <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-green-500" />{unreadCounts.active} active</span>}
-            {unreadCounts.waiting > 0 && <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-yellow-500" />{unreadCounts.waiting} waiting</span>}
+            {unreadCounts.active > 0 && <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary" />{unreadCounts.active} active</span>}
+            {unreadCounts.waiting > 0 && <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-accent" />{unreadCounts.waiting} waiting</span>}
           </div>
         </div>
       )}
