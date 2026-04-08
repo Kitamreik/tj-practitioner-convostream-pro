@@ -58,6 +58,7 @@ interface Conversation {
   timestamp: any;
   unread: boolean;
   status: "active" | "waiting" | "resolved";
+  assignedAgent?: string;
 }
 
 interface ConversationMessage {
