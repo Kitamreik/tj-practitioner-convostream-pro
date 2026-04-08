@@ -209,6 +209,11 @@ const Conversations: React.FC = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [channelFilter, setChannelFilter] = useState<string>("all");
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const replyInputRef = useRef<HTMLInputElement>(null);
+
+  const agents = ["Alice Johnson", "Bob Smith", "Carol Davis", "Dan Lee"];
+
 
   // Single conversation export handlers
   const selected = conversations.find((c) => c.id === selectedId);
